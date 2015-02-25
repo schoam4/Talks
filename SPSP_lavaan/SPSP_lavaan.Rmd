@@ -17,22 +17,6 @@ output:
     - Path Analysis
     - Confirmatory Factor Analysis (CFA) 
 
-## What is a model?
-
-- A model is a set of relations between observed and latent variables that can be represented by a set of equations.
-- Or...
-- A useful representation of reality
-
-> Box: "essentially, all models are wrong, but some are useful"
-
-## Latent variables
-
-- A latent variable:
-    - is a construct that is hypothesized to exist but is not directly measurable
-    - causes behaviors that are directly measurable; these behaviors are called indicators of the latent variable
-    - is defined as everything that is in common between its manifest (observed) indicators 
-
-
 ## SEM in R
 
 ```{r setup, include=FALSE}
@@ -49,6 +33,16 @@ opts_chunk$set(dev = 'pdf')
 
     - From lavaan.org
     
+- lavaan is extensively tested and updated
+    - Bugs are quickly reported and corrected
+
+- To install lavaan:
+```
+install.packages("lavaan")
+```
+
+    
+## lavaan    
 - Features
     - Full support for mean structures and multiple groups
     - Several estimators available (including ML, GLS, WLS...)
@@ -64,15 +58,22 @@ opts_chunk$set(dev = 'pdf')
 
 - lavaan syntax uses a few different operators to specify relationships between variables
     - =~ is used for factor loadings
-        - ```Positive =~ Great```
+        - ```energetic =~ active```
     - ~~ is used for variance and covariances
-        - ```Great ~~ Great```
+        - ```active ~~ active```
     - ~ is used for regressions 
     - \* is used to fix a parameter to a specific value
-        - ```Positive ~~ 1*Positive```
+        - ```energetic ~~ 1*energetic```
+
+## lavaan syntax
+
+- Users can also specify models with code from other software and fit them with lavaan
+    - mplus2lavaan (in the lavaan package)
+    - lisrel2lavaan (in the semTools package)
+    - Onyx (graphical user interface)
 
 ## lavaan: Example
-- Two factor CFA based on the msq daa (from the psych package)
+- Two factor CFA based on the msq data (from the psych package)
 
 ```{r, echo=FALSE, include=FALSE}
 library(lavaan)
@@ -84,7 +85,7 @@ library(semPlot)
 ```{r}
 mod <- '
 energetic =~ active + vigorous + wakeful + lively 
-tense =~ intense + jittery + fearful
+negative =~  jittery + nervous + scared
 '
 
 fit <- cfa(mod, data = msq)
@@ -103,7 +104,7 @@ semPaths(fit, "est", nCharNodes = 0)
 ```{r}
 fit1 <- cfa(mod, data = msq, std.lv = TRUE)
 ```
-The std.lv option will use a fixed factor method of identification
+- The std.lv option will use a fixed factor method of identification
 
 ## lavaan: Example
 ```{r, echo = FALSE}
@@ -114,40 +115,41 @@ semPaths(fit1, "est", nCharNodes = 0)
 - Model results can be inspected with summary, nested models can be compared with anova
 
 ```
-Estimator                                         ML
-  Minimum Function Test Statistic              323.554
+  Estimator                                         ML
+  Minimum Function Test Statistic              354.351
   Degrees of freedom                                13
   P-value (Chi-square)                           0.000
 
 User model versus baseline model:
 
-  Comparative Fit Index (CFI)                    0.970
-  Tucker-Lewis Index (TLI)                       0.952
+  Comparative Fit Index (CFI)                    0.969
+  Tucker-Lewis Index (TLI)                       0.950
 
 Loglikelihood and Information Criteria:
 
-  Loglikelihood user model (H0)             -26806.206
-  Loglikelihood unrestricted model (H1)     -26644.430
+  Loglikelihood user model (H0)             -25561.582
+  Loglikelihood unrestricted model (H1)     -25384.406
 
-  Number of free parameters                         22
-  Akaike (AIC)                               53656.413
-  Bayesian (BIC)                             53794.285
-  Sample-size adjusted Bayesian (BIC)        53724.379
 ```
 
 ## lavaan: Example
 
 ```
+  Number of free parameters                         15
+  Akaike (AIC)                               51153.164
+  Bayesian (BIC)                             51246.989
+  Sample-size adjusted Bayesian (BIC)        51199.326
+
 Root Mean Square Error of Approximation:
 
-  RMSEA                                          0.078
-  90 Percent Confidence Interval          0.071  0.086
+  RMSEA                                          0.083
+  90 Percent Confidence Interval          0.075  0.090
   P-value RMSEA <= 0.05                          0.000
 
 Standardized Root Mean Square Residual:
 
-  SRMR                                           0.048
-
+  SRMR                                           0.076
+  
 ```
 
 ## lavaan: Example
@@ -155,29 +157,28 @@ Standardized Root Mean Square Residual:
                    Estimate  Std.err  Z-value  P(>|z|)
 Latent variables:
   energetic =~
-    active            0.798    0.012   64.708    0.000
-    vigorous          0.639    0.011   56.253    0.000
-    wakeful           0.614    0.013   46.768    0.000
-    lively            0.785    0.012   67.324    0.000
-  tense =~
-    intense           0.681    0.019   35.674    0.000
-    jittery           0.413    0.016   25.531    0.000
-    fearful           0.121    0.008   14.830    0.000
+    active            0.796    0.012   63.720    0.000
+    vigorous          0.632    0.011   55.166    0.000
+    wakeful           0.615    0.013   46.630    0.000
+    lively            0.792    0.012   67.459    0.000
+  negative =~
+    jittery           0.429    0.014   29.904    0.000
+    nervous           0.571    0.013   42.769    0.000
+    scared            0.282    0.009   32.220    0.000
 
 Covariances:
   energetic ~~
-    tense             0.579    0.017   34.129    0.000
-
+    negative          0.181    0.018    9.853    0.000
 ```
 
 ## lavaan: Example Multiple Groups 
-- Two factor CFA based on the msq daa (from the psych package)
+- Two factor CFA based on the msq data (from the psych package)
     - Compare the msq with the revised msq
 
 ```{r}
 mod <- '
 energetic =~ active + vigorous + wakeful + lively 
-tense =~ intense + jittery + fearful
+negative =~  jittery + nervous + scared
 '
 
 fitg <- cfa(mod, data = msq, group = "scale")
@@ -203,30 +204,29 @@ measurementInvariance(mod, data = msq, group = "scale")
 
 ## lavaan: Example Multiple Groups
 ```
-
 Model 1: configural invariance:
     chisq        df    pvalue       cfi     rmsea       bic 
-  343.506    26.000     0.000     0.970     0.080 53254.619 
+  380.753    26.000     0.000     0.968     0.084 51380.620 
 
 Model 2: weak invariance (equal loadings):
     chisq        df    pvalue       cfi     rmsea       bic 
-  352.357    31.000     0.000     0.969     0.073 53222.196 
+  396.410    31.000     0.000     0.967     0.078 51355.002 
 
 [Model 1 versus model 2]
   delta.chisq      delta.df delta.p.value     delta.cfi 
-        8.851         5.000         0.115         0.000 
+       15.657         5.000         0.008         0.001 
 
 Model 3: strong invariance (equal loadings + intercepts):
     chisq        df    pvalue       cfi     rmsea       bic 
-  376.702    36.000     0.000     0.967     0.070 53205.266 
+  403.573    36.000     0.000     0.967     0.073 51320.889 
 
 [Model 1 versus model 3]
   delta.chisq      delta.df delta.p.value     delta.cfi 
-       33.195        10.000         0.000         0.002 
+       22.820        10.000         0.011         0.001 
 
 [Model 2 versus model 3]
   delta.chisq      delta.df delta.p.value     delta.cfi 
-       24.344         5.000         0.000         0.002         
+        7.163         5.000         0.209         0.000     
 ```
 
 ## lavaan: Example Categorical Indicators 
@@ -250,7 +250,7 @@ fitCat <- cfa(modCat, data = ability, std.lv = TRUE,
 
 ## lavaan: Example Categorical Indicators 
 ```{r, echo = FALSE}
-semPaths(fitCat, intercept = FALSE)
+semPaths(fitCat, "est", intercept = FALSE, nCharNodes = 6)
 ```
 
 ## lavaan: Extensions
@@ -265,7 +265,7 @@ semPaths(fitCat, intercept = FALSE)
     
 ## lavaan: Resources
 
-- The lavaan website is extremely helpful (lavaan.org)
+- The lavaan website is extremely helpful (http://lavaan.org)
     - It include a tutorial in lavaan
     - Links to examples from popular SEM books in lavaan
     - Link to a discussion board about lavaan
@@ -277,5 +277,5 @@ semPaths(fitCat, intercept = FALSE)
 - email: schoemanna@ecu.edu
 
 
-- Slides from today at: 
+- Slides and code: https://sites.google.com/site/alexandermschoemann/supplementarymaterials
 
